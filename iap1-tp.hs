@@ -1,5 +1,4 @@
-
-
+import Prelude
 ----- Completar con los datos del grupo
 
 -- Nombre de Grupo: xx
@@ -14,9 +13,9 @@ type Publicacion = (Usuario, String, [Usuario]) -- (usuario que publica, texto p
 type RedSocial = ([Usuario], [Relacion], [Publicacion])
 
 
-
--- Funciones basicas
-
+--------------------------------
+---     FUNCIONES BÁSICAS    ---     
+--------------------------------
 
 usuarios :: RedSocial -> [Usuario]
 usuarios (us, _, _) = us
@@ -39,18 +38,38 @@ usuarioDePublicacion (u, _, _) = u
 likesDePublicacion :: Publicacion -> [Usuario]
 likesDePublicacion (_, _, us) = us
 
--- Ejercicios
+--------------------------------
+---        EJERCICIOS        ---
+--------------------------------
 
+
+--toma la lista de usuarios de la red social y la pasa como argumento a la función proyectarNombres para obtener la lista de nombres de usuarios. 
 nombresDeUsuarios :: RedSocial -> [String]
-nombresDeUsuarios = undefined
+nombresDeUsuarios (us, _, _) = proyectarNombres us 
+
+--se encarga de filtrar los usuarios inválidos y de eliminar duplicados
+proyectarNombres :: [Usuario] -> [String]
+proyectarNombres [] = []
+proyectarNombres ((_, nombre):us) = sinRepetidos(nombre : proyectarNombres us)
 
 -- describir qué hace la función: .....
 amigosDe :: RedSocial -> Usuario -> [Usuario]
-amigosDe = undefined
+amigosDe redSocial usuario = amigosDe' (usuarios redSocial) (relaciones redSocial) usuario []
 
--- describir qué hace la función: .....
+--recorre la lista de Usuarios, si un Usuario está relacionado directamente con el Usuario dado, lo agrega a la lista de amigos y continúa recorriendo
+--Si no está relacionado, simplemente continúa recorriendo
+amigosDe' :: [Usuario] -> [Relacion] -> Usuario -> [Usuario] -> [Usuario]
+amigosDe' [] _ _ amigos = amigos
+amigosDe' (u:us) relaciones usuario amigos
+    | relacionadosDirecto u usuario redSocial = amigosDe' us relaciones usuario (u:amigos)
+    | otherwise = amigosDe' us relaciones usuario amigos
+    where redSocial = (us, relaciones, [])
+
+    
+--toma una "red social" y un "usuario", y devuelve la cantidad de amigos que tiene ese usuario en esa red social.
+--se llama a la función "longitud" con esa lista de amigos como argumento, lo que devuelve la cantidad de elementos en esa lista.
 cantidadDeAmigos :: RedSocial -> Usuario -> Integer
-cantidadDeAmigos = undefined
+cantidadDeAmigos redSocial usuario = longitud (amigosDe redSocial usuario)
 
 -- describir qué hace la función: .....
 usuarioConMasAmigos :: RedSocial -> Usuario
@@ -80,8 +99,9 @@ tieneUnSeguidorFiel = undefined
 existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool
 existeSecuenciaDeAmigos = undefined
 
-
---auxiliares
+--------------------------------
+---        AUXILIARES        ---
+--------------------------------
 
 pertenece :: (Eq a) => a ->[a] -> Bool
 pertenece e[]= False
@@ -96,11 +116,11 @@ mismosElementos e(x:xs)=pertenece x e  && (mismosElementos xs) (quitar x e)
                 |e == y = quitar e ys
                 |otherwise = y:quitar e ys
  
-sinRepetidos :: (Eq t) => [t] -> Bool
-sinRepetidos [] = True
+sinRepetidos :: Eq a => [a] -> [a]
+sinRepetidos [] = []
 sinRepetidos (x:xs)
-  | pertenece x xs = False
-  | otherwise = sinRepetidos xs
+    | pertenece x xs = sinRepetidos xs
+    | otherwise = x : sinRepetidos xs
 
 empiezaCon :: Eq a => a -> [a] -> Bool
 empiezaCon _ [] = False
@@ -197,10 +217,10 @@ usuariosDePublicacionSonUsuariosDeRed _ [] = True
 usuariosDePublicacionSonUsuariosDeRed us (p:ps) =
   pertenece (usuarioDePublicacion p) us && usuariosDePublicacionSonUsuariosDeRed us ps
 
-publicacionesValidas :: [Usuario] -> [Publicacion] -> Bool
-publicacionesValidas us pubs = usuariosDePublicacionSonUsuariosDeRed us pubs && likesDePublicacionSonUsuariosDeRed us pubs && noHayPublicacionesRepetidas pubs
+--publicacionesValidas :: [Usuario] -> [Publicacion] -> Bool
+--publicacionesValidas us pubs = usuariosDePublicacionSonUsuariosDeRed us pubs && likesDePublicacionSonUsuariosDeRed us pubs && noHayPublicacionesRepetidas pubs
 
-redSocialValida :: RedSocial -> Bool
-redSocialValida red = usuariosValidos us &&
-                      relacionesValidas us rs &&
-                      publicacionesValidas us ps                               
+--redSocialValida :: RedSocial -> Bool
+--redSocialValida red = usuariosValidos us &&
+--                      relacionesValidas us rs &&
+--                      publicacionesValidas us ps                               
