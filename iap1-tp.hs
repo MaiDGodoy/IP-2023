@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 import Prelude
 ----- Completar con los datos del grupo
 
@@ -52,7 +53,7 @@ proyectarNombres :: [Usuario] -> [String]
 proyectarNombres [] = []
 proyectarNombres ((_, nombre):us) = sinRepetidos(nombre : proyectarNombres us)
 
--- describir qué hace la función: .....
+--llama a la función amigosDe' y devuelve la lista de amigos resultante.
 amigosDe :: RedSocial -> Usuario -> [Usuario]
 amigosDe redSocial usuario = amigosDe' (usuarios redSocial) (relaciones redSocial) usuario []
 
@@ -71,34 +72,72 @@ amigosDe' (u:us) relaciones usuario amigos
 cantidadDeAmigos :: RedSocial -> Usuario -> Integer
 cantidadDeAmigos redSocial usuario = longitud (amigosDe redSocial usuario)
 
--- describir qué hace la función: .....
+--La función principal devuelve el usuario de una red social que tiene más amigos.
+--la función auxiliar se encarga  de comparar la cantidad de amigos de cda usuario de la lista
+--utilizando llamada recursiva hasta q se de con el usuario con más amigos
 usuarioConMasAmigos :: RedSocial -> Usuario
-usuarioConMasAmigos = undefined
+usuarioConMasAmigos (us, rs, ps) = usuarioConMasAmigos' (tail us) (head us)
+  where
+    usuarioConMasAmigos' [] res = res
+    usuarioConMasAmigos' (u:us) res
+      | cantidadDeAmigos (us, rs, ps) u > cantidadDeAmigos (us, rs, ps) res = usuarioConMasAmigos' us u
+      | otherwise = usuarioConMasAmigos' us res
 
--- describir qué hace la función: .....
+--la función llama a la auxiliar, la cual se encarga de revisar si el primer usuario de la lista tiene más de 1000000 amigos, devolviendo True
+--caso contrario,llama recursivamente a la función con la cola de la lista
+--si es vacia, significa q no lo encontro, por lo tanto, False
 estaRobertoCarlos :: RedSocial -> Bool
-estaRobertoCarlos = undefined
+estaRobertoCarlos red = existeRobertoCarlos red (usuarios red)
+
+--determina si en la lista de usuarios existe alguno que tenga más de 1.000.000 de amigos o si se cumple esta condición para algún usuario fuera de la lista.
+--explayar explicación (?
+existeRobertoCarlos :: RedSocial -> [Usuario] -> Bool
+existeRobertoCarlos _ [] = False
+existeRobertoCarlos red (u:us) =
+    cantidadDeAmigos red u > 1000000 || existeRobertoCarlos red us
 
 -- describir qué hace la función: .....
 publicacionesDe :: RedSocial -> Usuario -> [Publicacion]
-publicacionesDe = undefined
+publicacionesDe redSocial usuario = publicacionesDeUsuario (publicaciones redSocial) usuario
+
+publicacionesDeUsuario :: [Publicacion] -> Usuario -> [Publicacion] --REVISAR, preguntar si el metodo "(u,"",[])" es válido
+publicacionesDeUsuario [] _ = []
+publicacionesDeUsuario ((u, _, _):publicaciones) usuario
+                   | u == usuario = (u,"",[]) : publicacionesDeUsuario publicaciones usuario
+                   | otherwise = publicacionesDeUsuario publicaciones usuario
 
 -- describir qué hace la función: .....
 publicacionesQueLeGustanA :: RedSocial -> Usuario -> [Publicacion]
-publicacionesQueLeGustanA = undefined
+publicacionesQueLeGustanA red u = sinRepetidos (publicacionesQueLeGustanAX (publicaciones red) u)
+
+publicacionesQueLeGustanAX :: [Publicacion] -> Usuario -> [Publicacion]
+publicacionesQueLeGustanAX [] _ = []
+publicacionesQueLeGustanAX (pub:publicaciones) u
+  | u `pertenece` likesDePublicacion pub = pub : publicacionesQueLeGustanAX publicaciones u
+  | otherwise = publicacionesQueLeGustanAX publicaciones u
 
 -- describir qué hace la función: .....
 lesGustanLasMismasPublicaciones :: RedSocial -> Usuario -> Usuario -> Bool
-lesGustanLasMismasPublicaciones = undefined
+lesGustanLasMismasPublicaciones red u1 u2 =
+  mismosElementos (publicacionesQueLeGustanA red u1) (publicacionesQueLeGustanA red u2)
 
 -- describir qué hace la función: .....
 tieneUnSeguidorFiel :: RedSocial -> Usuario -> Bool
-tieneUnSeguidorFiel = undefined
+tieneUnSeguidorFiel = undefined --- x.x preguntar
 
 -- describir qué hace la función: .....
-existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool
-existeSecuenciaDeAmigos = undefined
+existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool --no me compila | revisar
+existeSecuenciaDeAmigos red u1 u2
+            | u1 == u2 = True -- caso base: mismo usuario
+            | relacionadosDirecto u1 u2 red = True -- caso base: usuarios relacionados directamente
+            | otherwise = existeAmigoQueConectaCon u2 (amigosDe u1 red) red
 
+existeAmigoQueConectaCon :: Usuario -> [Usuario] -> RedSocial -> Bool
+existeAmigoQueConectaCon u2 [] red = False -- caso base: no hay más amigos que buscar
+existeAmigoQueConectaCon u2 (u:us) red
+            | relacionadosDirecto u u2 red = True -- caso base: amigo conecta con u2 directamente
+            | otherwise = existeAmigoQueConectaCon u2 us red -- buscar en la lista de amigos restantes
+ 
 --------------------------------
 ---        AUXILIARES        ---
 --------------------------------
