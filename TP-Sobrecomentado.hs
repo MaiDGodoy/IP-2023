@@ -43,7 +43,7 @@ likesDePublicacion (_, _, us) = us
 ---        EJERCICIOS        ---
 --------------------------------
 
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 --toma la lista de usuarios de la red social y la pasa como argumento a la función proyectarNombres para obtener la lista de nombres de usuarios. 
 nombresDeUsuarios :: RedSocial -> [String]
 nombresDeUsuarios (us, _, _) = proyectarNombres us 
@@ -52,7 +52,7 @@ nombresDeUsuarios (us, _, _) = proyectarNombres us
 proyectarNombres :: [Usuario] -> [String]
 proyectarNombres [] = []
 proyectarNombres ((_, nombre):us) = sinRepetidos(nombre : proyectarNombres us)
-
+----------------------------------------------------------------------------------------------------------------------------------------------
 --llama a la función amigosDe' y devuelve la lista de amigos resultante.
 amigosDe :: RedSocial -> Usuario -> [Usuario]
 amigosDe redSocial usuario = amigosDe' (usuarios redSocial) (relaciones redSocial) usuario []
@@ -65,13 +65,13 @@ amigosDe' (u:us) relaciones usuario amigos
     | relacionadosDirecto u usuario redSocial = amigosDe' us relaciones usuario (u:amigos)
     | otherwise = amigosDe' us relaciones usuario amigos
     where redSocial = (us, relaciones, [])
-
+----------------------------------------------------------------------------------------------------------------------------------------------
     
 --toma una "red social" y un "usuario", y devuelve la cantidad de amigos que tiene ese usuario en esa red social.
 --se llama a la función "longitud" con esa lista de amigos como argumento, lo que devuelve la cantidad de elementos en esa lista.
 cantidadDeAmigos :: RedSocial -> Usuario -> Integer
 cantidadDeAmigos redSocial usuario = longitud (amigosDe redSocial usuario)
-
+-----------------------------------------------------------------------------------------------------------------------------------------------
 --La función principal devuelve el usuario de una red social que tiene más amigos.
 --la función auxiliar se encarga  de comparar la cantidad de amigos de cda usuario de la lista
 --utilizando llamada recursiva hasta q se de con el usuario con más amigos
@@ -82,55 +82,86 @@ usuarioConMasAmigos (us, rs, ps) = usuarioConMasAmigos' (tail us) (head us)
     usuarioConMasAmigos' (u:us) res
       | cantidadDeAmigos (us, rs, ps) u > cantidadDeAmigos (us, rs, ps) res = usuarioConMasAmigos' us u
       | otherwise = usuarioConMasAmigos' us res
-
+-----------------------------------------------------------------------------------------------------------------------------------------------
 --la función llama a la auxiliar, la cual se encarga de revisar si el primer usuario de la lista tiene más de 1000000 amigos, devolviendo True
 --caso contrario,llama recursivamente a la función con la cola de la lista
 --si es vacia, significa q no lo encontro, por lo tanto, False
 estaRobertoCarlos :: RedSocial -> Bool
 estaRobertoCarlos red = existeRobertoCarlos red (usuarios red)
 
---determina si en la lista de usuarios existe alguno que tenga más de 1.000.000 de amigos o si se cumple esta condición para algún usuario fuera de la lista.
---explayar explicación (?
+--determina si en esa lista de usuarios existe alguno que tenga más de 1.000.000 de amigos o si se cumple esta condición para algún usuario fuera de la lista.
 existeRobertoCarlos :: RedSocial -> [Usuario] -> Bool
 existeRobertoCarlos _ [] = False
 existeRobertoCarlos red (u:us) =
     cantidadDeAmigos red u > 1000000 || existeRobertoCarlos red us
-
--- describir qué hace la función: .....
+-----------------------------------------------------------------------------------------------------------------------------------------------
+--devuelve una lista de publicaciones pertenecientes a un usuario específico
 publicacionesDe :: RedSocial -> Usuario -> [Publicacion]
 publicacionesDe redSocial usuario = publicacionesDeUsuario (publicaciones redSocial) usuario
+-- dentro de una red social dada. Itera sobre la lista de publicaciones y filtra aquellas cuyo usuario coincide con el usuario dado.
 
-publicacionesDeUsuario :: [Publicacion] -> Usuario -> [Publicacion] --REVISAR, preguntar si el metodo "(u,"",[])" es válido
+--realiza la recursión necesaria para construir la lista resultante. 
+publicacionesDeUsuario :: [Publicacion] -> Usuario -> [Publicacion]
 publicacionesDeUsuario [] _ = []
 publicacionesDeUsuario ((u, _, _):publicaciones) usuario
                    | u == usuario = (u,"",[]) : publicacionesDeUsuario publicaciones usuario
                    | otherwise = publicacionesDeUsuario publicaciones usuario
-
--- describir qué hace la función: .....
+-- Si el usuario de la publicación coincide con el usuario pasado como argumento,
+  -- se agrega la publicación a la lista de publicaciones y se continúa recursivamente con el resto de la lista.
+ -- En caso contrario, es decir, si el usuario de la publicación no coincide con el usuario pasado como argumento,
+  -- se continúa recursivamente con el resto de la lista de publicaciones sin agregar la publicación.
+                
+-----------------------------------------------------------------------------------------------------------------------------------------------
+--devuelve una lista de publicaciones que le gustan a un usuario específico en una red social
 publicacionesQueLeGustanA :: RedSocial -> Usuario -> [Publicacion]
 publicacionesQueLeGustanA red u = sinRepetidos (publicacionesQueLeGustanAX (publicaciones red) u)
 
+--filtra las publicaciones que le gustan a un usuario específico en una lista dada de publicaciones
 publicacionesQueLeGustanAX :: [Publicacion] -> Usuario -> [Publicacion]
 publicacionesQueLeGustanAX [] _ = []
 publicacionesQueLeGustanAX (pub:publicaciones) u
-  | u `pertenece` likesDePublicacion pub = pub : publicacionesQueLeGustanAX publicaciones u
-  | otherwise = publicacionesQueLeGustanAX publicaciones u
+  | pertenece u (likesDePublicacion pub) = pub : publicacionesQueLeGustanAX publicaciones u --1
+  | otherwise = publicacionesQueLeGustanAX publicaciones u                                  --2
 
--- describir qué hace la función: .....
+   --1 Si el usuario 'u' pertenece a la lista de usuarios a los que les gusta la publicación 'pub',
+   -- se agrega 'pub' a la lista de publicaciones y se continúa recursivamente con el resto de la lista.
+
+   --2 En caso contrario, si el usuario 'u' no pertenece a la lista de usuarios que les gusta 'pub',
+  -- se continúa recursivamente con el resto de la lista de publicaciones sin agregar 'pub'.
+-----------------------------------------------------------------------------------------------------------------------------------------------
+--determina si los usuarios u1 y u2 comparten las mismas publicaciones que les gustan en la red social red 
+--utilizando la función publicacionesQueLeGustanA y comparando las listas resultantes con la función mismosElementos.
 lesGustanLasMismasPublicaciones :: RedSocial -> Usuario -> Usuario -> Bool
 lesGustanLasMismasPublicaciones red u1 u2 =
   mismosElementos (publicacionesQueLeGustanA red u1) (publicacionesQueLeGustanA red u2)
-
--- describir qué hace la función: .....
+------------------------------------------------------------------------------------------------------------------------------------------------
+--se encarga de iterar por todos los usuarios de la red social y evaluar si le han dado "Me gusta" a todas las publicaciones de autor
 tieneUnSeguidorFiel :: RedSocial -> Usuario -> Bool
-tieneUnSeguidorFiel = undefined --- x.x preguntar
+tieneUnSeguidorFiel red = existeSeguidorFiel (usuarios red) (publicaciones red)
 
--- describir qué hace la función: .....
-existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool --no me compila | revisar
+--verifica si existe al menos un seguidor fiel en la red social.
+existeSeguidorFiel :: [Usuario] -> [Publicacion] -> Usuario -> Bool
+existeSeguidorFiel [] _ _ = False              --no hay más usuarios por revisar y no se ha encontrado un seguidor fiel
+existeSeguidorFiel (u2:us) ps u | u /= u2 && likesDePublicacionSonUsuariosDeRed (likesDePublicacionesDeUsuario ps u) (u2:us) = True
+                                | otherwise = existeSeguidorFiel us ps u
+
+--primero se verifica que u no sea igual a u2
+--luego se llama a la funcion  "likesDePublicacionesSonUsuariosDeRed" para verificar si todos los likes de las publicaciones en las que participa u son usuarios de la red social 
+--si coinciden ambos devuelve True, sino llama a la cola de la lista                               
+
+--obtiene todos los likes de las publicaciones en las cuales el usuario es el autor
+likesDePublicacionesDeUsuario :: [Publicacion] -> Usuario -> [Usuario]
+likesDePublicacionesDeUsuario [] _ = []
+likesDePublicacionesDeUsuario (p:ps) u
+      | usuarioDePublicacion p == u = likesDePublicacion p ++ likesDePublicacionesDeUsuario ps u
+      | otherwise = likesDePublicacionesDeUsuario ps u
+-------------------------------------------------------------------------------------------------------------------------------------------------
+--comprueba si existe una secuencia de amistad que conecta dos usuarios en una red social
+existeSecuenciaDeAmigos :: RedSocial -> Usuario -> Usuario -> Bool
 existeSecuenciaDeAmigos red u1 u2
             | u1 == u2 = True -- caso base: mismo usuario
             | relacionadosDirecto u1 u2 red = True -- caso base: usuarios relacionados directamente
-            | otherwise = existeAmigoQueConectaCon u2 (amigosDe u1 red) red
+            | otherwise = existeAmigoQueConectaCon u2 (amigosDe red u1) red --comprueba si existe un amigo en la lista de amigos de u1 que pueda conectar con u2 en la red social red
 
 existeAmigoQueConectaCon :: Usuario -> [Usuario] -> RedSocial -> Bool
 existeAmigoQueConectaCon u2 [] red = False -- caso base: no hay más amigos que buscar
@@ -141,6 +172,7 @@ existeAmigoQueConectaCon u2 (u:us) red
 --------------------------------
 ---        AUXILIARES        ---
 --------------------------------
+--falta ordenar 
 
 pertenece :: (Eq a) => a ->[a] -> Bool
 pertenece e[]= False
